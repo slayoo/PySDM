@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>PySDM.physics.impl.fake_unit_registry API documentation</title>
+<title>PySDM.attributes.physics.hygroscopicity API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,30 +19,31 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>PySDM.physics.impl.fake_unit_registry</code></h1>
+<h1 class="title">Module <code>PySDM.attributes.physics.hygroscopicity</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def _fake(si_unit):
-    return (1. * si_unit).to_base_units().magnitude
+<pre><code class="python">from ..impl.derived_attribute import DerivedAttribute
+from ..impl.extensive_attribute import ExtensiveAttribute
 
 
-class FakeUnitRegistry:
+class KappaTimesDryVolume(ExtensiveAttribute):
+    def __init__(self, builder):
+        super().__init__(builder, name=&#39;kappa times dry volume&#39;)
 
-    def __init__(self, si):
-        self.dimensionless = 1.
-        for prefix in (&#34;nano&#34;, &#34;micro&#34;, &#34;milli&#34;, &#34;centi&#34;, &#34;&#34;, &#34;hecto&#34;, &#34;kilo&#34;):
-            for unit in (&#34;metre&#34;, &#34;gram&#34;, &#34;hertz&#34;, &#34;mole&#34;, &#34;joule&#34;, &#34;kelvin&#34;,
-                         &#34;second&#34;, &#34;minute&#34;, &#34;pascal&#34;, &#34;litre&#34;, &#34;hour&#34;, &#34;newton&#34;):
-                self.__setattr__(prefix + unit, _fake(si.__getattr__(prefix + unit)))
-                self.__setattr__(prefix + unit + &#34;s&#34;, _fake(si.__getattr__(prefix + unit + &#34;s&#34;)))
 
-        for prefix in (&#34;n&#34;, &#34;u&#34;, &#34;m&#34;, &#34;c&#34;, &#34;&#34;, &#34;h&#34;, &#34;k&#34;):
-            for unit in (&#34;m&#34;, &#34;g&#34;, &#34;Hz&#34;, &#34;mol&#34;, &#34;J&#34;, &#34;K&#34;, &#34;s&#34;, &#34;min&#34;, &#34;day&#34;, &#34;Pa&#34;, &#34;l&#34;, &#34;h&#34;, &#34;bar&#34;, &#34;N&#34;):
-                self.__setattr__(prefix + unit, _fake(si.__getattr__(prefix + unit)))</code></pre>
+class Kappa(DerivedAttribute):
+    def __init__(self, builder):
+        self.kappa_times_dry_volume = builder.get_attribute(&#39;kappa times dry volume&#39;)
+        self.dry_volume = builder.get_attribute(&#39;dry volume&#39;)
+        deps = (self.kappa_times_dry_volume, self.dry_volume)
+        super().__init__(builder, name=&#39;kappa&#39;, dependencies=deps)
+
+    def recalculate(self):
+        self.data.ratio(self.kappa_times_dry_volume.get(), self.dry_volume.get())</code></pre>
 </details>
 </section>
 <section>
@@ -54,9 +55,9 @@ class FakeUnitRegistry:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="PySDM.physics.impl.fake_unit_registry.FakeUnitRegistry"><code class="flex name class">
-<span>class <span class="ident">FakeUnitRegistry</span></span>
-<span>(</span><span>si)</span>
+<dt id="PySDM.attributes.physics.hygroscopicity.Kappa"><code class="flex name class">
+<span>class <span class="ident">Kappa</span></span>
+<span>(</span><span>builder)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -64,20 +65,58 @@ class FakeUnitRegistry:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class FakeUnitRegistry:
+<pre><code class="python">class Kappa(DerivedAttribute):
+    def __init__(self, builder):
+        self.kappa_times_dry_volume = builder.get_attribute(&#39;kappa times dry volume&#39;)
+        self.dry_volume = builder.get_attribute(&#39;dry volume&#39;)
+        deps = (self.kappa_times_dry_volume, self.dry_volume)
+        super().__init__(builder, name=&#39;kappa&#39;, dependencies=deps)
 
-    def __init__(self, si):
-        self.dimensionless = 1.
-        for prefix in (&#34;nano&#34;, &#34;micro&#34;, &#34;milli&#34;, &#34;centi&#34;, &#34;&#34;, &#34;hecto&#34;, &#34;kilo&#34;):
-            for unit in (&#34;metre&#34;, &#34;gram&#34;, &#34;hertz&#34;, &#34;mole&#34;, &#34;joule&#34;, &#34;kelvin&#34;,
-                         &#34;second&#34;, &#34;minute&#34;, &#34;pascal&#34;, &#34;litre&#34;, &#34;hour&#34;, &#34;newton&#34;):
-                self.__setattr__(prefix + unit, _fake(si.__getattr__(prefix + unit)))
-                self.__setattr__(prefix + unit + &#34;s&#34;, _fake(si.__getattr__(prefix + unit + &#34;s&#34;)))
-
-        for prefix in (&#34;n&#34;, &#34;u&#34;, &#34;m&#34;, &#34;c&#34;, &#34;&#34;, &#34;h&#34;, &#34;k&#34;):
-            for unit in (&#34;m&#34;, &#34;g&#34;, &#34;Hz&#34;, &#34;mol&#34;, &#34;J&#34;, &#34;K&#34;, &#34;s&#34;, &#34;min&#34;, &#34;day&#34;, &#34;Pa&#34;, &#34;l&#34;, &#34;h&#34;, &#34;bar&#34;, &#34;N&#34;):
-                self.__setattr__(prefix + unit, _fake(si.__getattr__(prefix + unit)))</code></pre>
+    def recalculate(self):
+        self.data.ratio(self.kappa_times_dry_volume.get(), self.dry_volume.get())</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="PySDM.attributes.impl.derived_attribute.DerivedAttribute" href="../impl/derived_attribute.html#PySDM.attributes.impl.derived_attribute.DerivedAttribute">DerivedAttribute</a></li>
+<li><a title="PySDM.attributes.impl.attribute.Attribute" href="../impl/attribute.html#PySDM.attributes.impl.attribute.Attribute">Attribute</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="PySDM.attributes.physics.hygroscopicity.Kappa.recalculate"><code class="name flex">
+<span>def <span class="ident">recalculate</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def recalculate(self):
+    self.data.ratio(self.kappa_times_dry_volume.get(), self.dry_volume.get())</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="PySDM.attributes.physics.hygroscopicity.KappaTimesDryVolume"><code class="flex name class">
+<span>class <span class="ident">KappaTimesDryVolume</span></span>
+<span>(</span><span>builder)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class KappaTimesDryVolume(ExtensiveAttribute):
+    def __init__(self, builder):
+        super().__init__(builder, name=&#39;kappa times dry volume&#39;)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="PySDM.attributes.impl.extensive_attribute.ExtensiveAttribute" href="../impl/extensive_attribute.html#PySDM.attributes.impl.extensive_attribute.ExtensiveAttribute">ExtensiveAttribute</a></li>
+<li><a title="PySDM.attributes.impl.base_attribute.BaseAttribute" href="../impl/base_attribute.html#PySDM.attributes.impl.base_attribute.BaseAttribute">BaseAttribute</a></li>
+<li><a title="PySDM.attributes.impl.attribute.Attribute" href="../impl/attribute.html#PySDM.attributes.impl.attribute.Attribute">Attribute</a></li>
+</ul>
 </dd>
 </dl>
 </section>
@@ -90,13 +129,19 @@ class FakeUnitRegistry:
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="PySDM.physics.impl" href="index.html">PySDM.physics.impl</a></code></li>
+<li><code><a title="PySDM.attributes.physics" href="index.html">PySDM.attributes.physics</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="PySDM.physics.impl.fake_unit_registry.FakeUnitRegistry" href="#PySDM.physics.impl.fake_unit_registry.FakeUnitRegistry">FakeUnitRegistry</a></code></h4>
+<h4><code><a title="PySDM.attributes.physics.hygroscopicity.Kappa" href="#PySDM.attributes.physics.hygroscopicity.Kappa">Kappa</a></code></h4>
+<ul class="">
+<li><code><a title="PySDM.attributes.physics.hygroscopicity.Kappa.recalculate" href="#PySDM.attributes.physics.hygroscopicity.Kappa.recalculate">recalculate</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="PySDM.attributes.physics.hygroscopicity.KappaTimesDryVolume" href="#PySDM.attributes.physics.hygroscopicity.KappaTimesDryVolume">KappaTimesDryVolume</a></code></h4>
 </li>
 </ul>
 </li>
