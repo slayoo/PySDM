@@ -1,36 +1,37 @@
 """
 P(m; x, y) = nu^2 * (x+y) exp(-m * nu)
-nu = 1/m* where m* is a scaling factor for fragment size dist.
+nu = 1/m* where m* is a scaling factor for fragment mass dist.
+see https://doi.org/10.1175/1520-0469(1988)045<3387:EORSPI>2.0.CO;2
 """
 
 
-class Feingold1988Frag:  # pylint: disable=too-many-instance-attributes
-    def __init__(self, scale, fragtol=1e-3, vmin=0.0, nfmax=None):
+class Feingold1988:  # pylint: disable=too-many-instance-attributes
+    def __init__(self, scale, fragtol=1e-3, mass_min=0.0, nfmax=None):
         self.particulator = None
         self.scale = scale
         self.fragtol = fragtol
-        self.vmin = vmin
+        self.mass_min = mass_min
         self.nfmax = nfmax
-        self.sum_of_volumes = None
+        self.sum_of_masses = None
 
     def register(self, builder):
         self.particulator = builder.particulator
-        builder.request_attribute("volume")
-        self.sum_of_volumes = self.particulator.PairwiseStorage.empty(
+        builder.request_attribute("water mass")
+        self.sum_of_masses = self.particulator.PairwiseStorage.empty(
             self.particulator.n_sd // 2, dtype=float
         )
 
-    def __call__(self, nf, frag_size, u01, is_first_in_pair):
-        self.sum_of_volumes.sum(
-            self.particulator.attributes["volume"], is_first_in_pair
+    def __call__(self, nf, frag_mass, u01, is_first_in_pair):
+        self.sum_of_masses.sum(
+            self.particulator.attributes["water mass"], is_first_in_pair
         )
         self.particulator.backend.feingold1988_fragmentation(
             n_fragment=nf,
             scale=self.scale,
-            frag_size=frag_size,
-            x_plus_y=self.sum_of_volumes,
+            frag_mass=frag_mass,
+            x_plus_y=self.sum_of_masses,
             rand=u01,
             fragtol=self.fragtol,
-            vmin=self.vmin,
+            mass_min=self.mass_min,
             nfmax=self.nfmax,
         )
