@@ -11,24 +11,28 @@ from matplotlib import pyplot
 from PySDM_examples.Shima_et_al_2009.example import run
 from PySDM_examples.Shima_et_al_2009.settings import Settings
 from PySDM_examples.Shima_et_al_2009.spectrum_plotter import SpectrumPlotter
-
 from PySDM.physics import si
+from PySDM import Formulae
 
 COLORS = ("red", "green", "blue")
-
+TRIVIA = Formulae().trivia
 
 class TestConvergence:  # pylint: disable=missing-class-docstring
     @staticmethod
     @pytest.mark.parametrize(
-        "adaptive, dt",
+        "adaptive, dt, sampling_ctor_kwargs",
         (
-            pytest.param(False, 100 * si.s, marks=pytest.mark.xfail(strict=True)),
-            (True, 100 * si.s),
-            pytest.param(False, 50 * si.s, marks=pytest.mark.xfail(strict=True)),
-            (False, 5 * si.s),
+            (False, 10 * si.s, {'size_range':(
+                TRIVIA.volume(radius=1*si.um),
+                TRIVIA.volume(radius=100*si.um)
+            )}),
+            pytest.param(False, 10 * si.s, {}, marks=pytest.mark.xfail(strict=True)),
+            # (True, 100 * si.s, {}),
+            # pytest.param(False, 50 * si.s, {}, marks=pytest.mark.xfail(strict=True)),
+            # (False, 5 * si.s, {}),
         ),
     )
-    def test_convergence_with_sd_count(dt, adaptive, plot=False):
+    def test_convergence_with_sd_count(dt, adaptive, sampling_ctor_kwargs, plot=True):
         """check if increasing the number of super particles indeed
         reduces the error of the simulation (vs. analytic solution)"""
         # arrange
@@ -41,29 +45,17 @@ class TestConvergence:  # pylint: disable=missing-class-docstring
         for i, ln2_nsd in enumerate((13, 15, 17)):
             settings.dt = dt
             settings.n_sd = 2**ln2_nsd
-            values, _ = run(settings)
+            values, _ = run(settings, sampling_ctor_kwargs=sampling_ctor_kwargs)
 
-            title = (
-                ""
-                if i != 0
-                else (
-                    f"{settings.dt=}  settings.times={settings.steps}  {settings.adaptive=}"
-                )
-            )
+            title = f"{settings.dt=}  settings.times={settings.steps}  {settings.adaptive=}"
+
             errors[ln2_nsd] = plotter.plot(
-                **dict(
-                    islice(
-                        {  # supporting older versions of PySDM-examples
-                            "t": settings.steps[-1],
-                            "spectrum": values[tuple(values.keys())[-1]],
-                            "label": f"{ln2_nsd=}",
-                            "color": COLORS[i],
-                            "title": title,
-                            "add_error_to_label": True,
-                        }.items(),
-                        len(signature(plotter.plot).parameters),
-                    )
-                )
+                t= settings.steps[-1],
+                spectrum= values[tuple(values.keys())[-1]],
+                label= f"{ln2_nsd=}",
+                color= COLORS[i],
+                title= title,
+                add_error_to_label= True,
             )
 
         # plot
