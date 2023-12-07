@@ -13,12 +13,18 @@ from PySDM.initialisation.sampling.spectral_sampling import ConstantMultiplicity
 from PySDM.products import ParticleVolumeVersusRadiusLogarithmSpectrum, WallTime
 
 
-def run(settings, backend=CPU, observers=()):
+def run(settings, backend=CPU, observers=(), sampling_ctor_kwargs=None):
     builder = Builder(n_sd=settings.n_sd, backend=backend(formulae=settings.formulae))
     builder.set_environment(Box(dv=settings.dv, dt=settings.dt))
     attributes = {}
-    sampling = ConstantMultiplicity(settings.spectrum)
+
+    sampling = ConstantMultiplicity(settings.spectrum, **(sampling_ctor_kwargs or {}))
+
     attributes["volume"], attributes["multiplicity"] = sampling.sample(settings.n_sd)
+
+    for attr in ("volume", "multiplicity"):
+        print(f'{attr} in range: {np.amin(attributes[attr])} - {np.amax(attributes[attr])}')
+
     coalescence = Coalescence(
         collision_kernel=settings.kernel, adaptive=settings.adaptive
     )
